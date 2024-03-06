@@ -59,7 +59,7 @@ if (params.platform == 'illumina') {
     include { NANOPORE } from './workflows/nanopore'
 }
 
-workflow VIRALRECON {
+workflow NFCORE_VIRALRECON {
 
     //
     // WORKFLOW: Variant and de novo assembly analysis for Illumina data
@@ -87,7 +87,7 @@ workflow VIRALRECON {
 //
 
 workflow {
-    VIRALRECON ()
+    NFCORE_VIRALRECON ()
 }
 
 /*
