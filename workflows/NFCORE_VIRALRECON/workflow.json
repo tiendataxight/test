@@ -1,0 +1,995 @@
+{
+  "schema": "v3",
+  "id": "",
+  "displayName": "",
+  "title": "nf-core/viralrecon pipeline parameters",
+  "workflowVersion": "",
+  "categories": [],
+  "config": { "mainScript": "main.nf", "executionEngine": "nextflow" },
+  "description": "Assembly and intrahost/low-frequency variant calling for viral samples",
+  "inputs": {
+    "input": {
+      "title": "",
+      "required": false,
+      "description": "Path to comma-separated file containing information about the samples you would like to analyse.",
+      "help_text": "You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/viralrecon/docs/usage#introduction).",
+      "type": "string",
+      "format": "file"
+    },
+    "platform": {
+      "title": "",
+      "required": false,
+      "description": "NGS platform used to sequence the samples.",
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "illumina",
+          "name": "illumina"
+        },
+        {
+          "id": "nanopore",
+          "name": "nanopore"
+        }
+      ]
+    },
+    "protocol": {
+      "title": "",
+      "required": false,
+      "description": "Specifies the type of protocol used for sequencing.",
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "metagenomic",
+          "name": "metagenomic"
+        },
+        {
+          "id": "amplicon",
+          "name": "amplicon"
+        }
+      ]
+    },
+    "outdir": {
+      "title": "",
+      "required": true,
+      "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+      "type": "string",
+      "default": "{{formbio.params.output}}"
+    },
+    "genome": {
+      "title": "",
+      "required": false,
+      "description": "Name of viral reference genome.",
+      "help_text": "You can find the keys to specify the genomes in the [Genomes config file](https://github.com/nf-core/configs/blob/master/conf/pipeline/viralrecon/genomes.config).",
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "NC_045512.2",
+          "name": "NC_045512.2"
+        },
+        {
+          "id": "MN908947.3",
+          "name": "MN908947.3"
+        },
+        {
+          "id": "NC_063383.1",
+          "name": "NC_063383.1"
+        },
+        {
+          "id": "ON563414.3",
+          "name": "ON563414.3"
+        },
+        {
+          "id": "MT903344.1",
+          "name": "MT903344.1"
+        }
+      ]
+    },
+    "email": {
+      "title": "",
+      "required": false,
+      "hidden": true,
+      "description": "Email address for completion summary.",
+      "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
+      "type": "string",
+      "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
+    },
+    "fasta": {
+      "title": "",
+      "required": false,
+      "description": "Path to FASTA genome file.",
+      "help_text": "If you have no genome reference available, the pipeline can build one using a FASTA file. This requires additional time and resources, so it's better to use a pre-build index if possible.",
+      "type": "string",
+      "format": "file"
+    },
+    "gff": {
+      "title": "",
+      "required": false,
+      "description": "Full path to GFF annotation file.",
+      "type": "string",
+      "format": "file"
+    },
+    "bowtie2_index": {
+      "title": "",
+      "required": false,
+      "description": "Path to directory or tar.gz archive for pre-built Bowtie2 index.",
+      "type": "string"
+    },
+    "primer_bed": {
+      "title": "",
+      "required": false,
+      "description": "If the '--protocol amplicon' parameter is provided then iVar is used to trim primer sequences after read alignment and before variant calling.",
+      "help_text": "iVar uses the primer positions relative to the viral genome supplied in this file to soft clip primer sequences from a coordinate sorted BAM file. The file must be in BED format as highlighted below:\n\n```\nMN908947.3 30 54 nCoV-2019_1_LEFT 60 -\nMN908947.3 385 410 nCoV-2019_1_RIGHT 60 +\nMN908947.3 320 342 nCoV-2019_2_LEFT 60 -\nMN908947.3 704 726 nCoV-2019_2_RIGHT 60 +\n```",
+      "type": "string",
+      "format": "file"
+    },
+    "primer_fasta": {
+      "title": "",
+      "required": false,
+      "description": "If the '--protocol amplicon' parameter is provided then Cutadapt is used to trim primer sequences from FastQ files before de novo assembly.",
+      "help_text": "This file must contain amplicon primer sequences in Fasta format. An example is shown below:\n\n```\n>nCoV-2019_1_LEFT\nACCAACCAACTTTCGATCTCTTGT\n>nCoV-2019_1_RIGHT\nCATCTTTAAGATGTTGACGTGCCTC\n>nCoV-2019_2_LEFT\nCTGTTTTACAGGTTCGCGACGT\n>nCoV-2019_2_RIGHT\nTAAGGATCAGTGCCAAGCTCGT\n```",
+      "type": "string",
+      "format": "file"
+    },
+    "primer_set": {
+      "title": "",
+      "required": false,
+      "description": "The primer set to be used for the data analysis.",
+      "help_text": "Where possible we are trying to collate links and settings for standard primer sets to make it easier to run the pipeline with standard keys. See https://github.com/nf-core/configs/blob/master/conf/pipeline/viralrecon/genomes.config",
+      "type": "string"
+    },
+    "primer_set_version": {
+      "title": "",
+      "required": false,
+      "description": "Version of the primer set e.g. '--primer_set artic --primer_set_version 3'.",
+      "help_text": "Where possible we are trying to collate links and settings for standard primer sets to make it easier to run the pipeline with standard keys. See https://github.com/nf-core/configs/blob/master/conf/pipeline/viralrecon/genomes.config",
+      "type": "string"
+    },
+    "primer_left_suffix": {
+      "title": "",
+      "required": false,
+      "description": "Suffix used in name field of '--primer_bed' to indicate left primer position.",
+      "default": "_LEFT",
+      "type": "string"
+    },
+    "primer_right_suffix": {
+      "title": "",
+      "required": false,
+      "description": "Suffix used in name field of '--primer_bed' to indicate right primer position.",
+      "default": "_RIGHT",
+      "type": "string"
+    },
+    "save_reference": {
+      "title": "",
+      "required": false,
+      "description": "If generated by the pipeline save reference genome related files to the results folder.",
+      "type": "boolean"
+    },
+    "fastq_dir": {
+      "title": "",
+      "required": false,
+      "description": "Path to a folder containing fastq files from the Nanopore run.",
+      "help_text": "e.g. '--fastq_dir ./20191023_1522_MC-110615_0_FAO93606_12bf9b4f/fastq_pass/'.",
+      "type": "string",
+      "format": "dir-path"
+    },
+    "fast5_dir": {
+      "title": "",
+      "required": false,
+      "description": "Path to a folder containing fast5 files from the Nanopore run.",
+      "help_text": "e.g. '--fast5_dir ./20191023_1522_MC-110615_0_FAO93606_12bf9b4f/fast5_pass/'. Not required when running the pipeline with the '--artic_minion_caller medaka' workflow.",
+      "type": "string",
+      "format": "dir-path"
+    },
+    "sequencing_summary": {
+      "title": "",
+      "required": false,
+      "description": "Sequencing summary file generated after Nanopore run completion.",
+      "help_text": " e.g. '--sequencing_summary ./20191023_1522_MC-110615_0_FAO93606_12bf9b4f/sequencing_summary.txt'. Not required when running the pipeline with the '--artic_minion_caller medaka' workflow.",
+      "type": "string",
+      "format": "file"
+    },
+    "min_barcode_reads": {
+      "title": "",
+      "required": false,
+      "description": "Minimum number of raw reads required per sample/barcode in order to be considered for the downstream processing steps.",
+      "default": 100,
+      "type": "integer"
+    },
+    "min_guppyplex_reads": {
+      "title": "",
+      "required": false,
+      "description": "Minimum number of reads required after the artic guppyplex process per sample/barcode in order to be considered for the downstream processing steps.",
+      "default": 10,
+      "type": "integer"
+    },
+    "artic_minion_caller": {
+      "title": "",
+      "required": false,
+      "description": "Variant caller used when running artic minion (default: 'nanopolish').",
+      "default": "nanopolish",
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "nanopolish",
+          "name": "nanopolish"
+        },
+        {
+          "id": "medaka",
+          "name": "medaka"
+        }
+      ]
+    },
+    "artic_minion_aligner": {
+      "title": "",
+      "required": false,
+      "description": "Aligner used when running artic minion (default: 'minimap2').",
+      "default": "minimap2",
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "minimap2",
+          "name": "minimap2"
+        },
+        {
+          "id": "bwa",
+          "name": "bwa"
+        }
+      ]
+    },
+    "artic_scheme": {
+      "title": "",
+      "required": false,
+      "description": "Primer scheme recognised by the artic minion command.",
+      "help_text": "e.g. '--artic_scheme ncov-2019'. See https://artic.readthedocs.io/en/latest/primer-schemes/ and https://github.com/artic-network/primer-schemes/blob/master/schemes_manifest.json.",
+      "type": "string"
+    },
+    "artic_minion_medaka_model": {
+      "title": "",
+      "required": false,
+      "description": "Parameter passed to artic minion and required when using the '--artic_minion_caller medaka' workflow.",
+      "help_text": "See https://github.com/nanoporetech/medaka",
+      "type": "string"
+    },
+    "skip_pycoqc": {
+      "title": "",
+      "required": false,
+      "description": "Skip pycoQC.",
+      "type": "boolean"
+    },
+    "skip_nanoplot": {
+      "title": "",
+      "required": false,
+      "description": "Skip NanoPlot.",
+      "type": "boolean"
+    },
+    "nextclade_dataset": {
+      "title": "",
+      "required": false,
+      "description": "Full path to Nextclade dataset required for 'nextclade run' command.",
+      "type": "string"
+    },
+    "nextclade_dataset_name": {
+      "title": "",
+      "required": false,
+      "description": "Name of Nextclade dataset to retrieve. A list of available datasets can be obtained using the 'nextclade dataset list' command.",
+      "type": "string"
+    },
+    "nextclade_dataset_reference": {
+      "title": "",
+      "required": false,
+      "description": "Accession id to download dataset based on a particular reference sequence. A list of available datasets can be obtained using the 'nextclade dataset list' command.",
+      "type": "string"
+    },
+    "nextclade_dataset_tag": {
+      "title": "",
+      "required": false,
+      "description": "Version tag of the dataset to download. A list of available datasets can be obtained using the 'nextclade dataset list' command.",
+      "type": "string"
+    },
+    "asciigenome_read_depth": {
+      "title": "",
+      "required": false,
+      "description": "Maximum read depth used to generate ASCIIGenome screenshots for variant locii.",
+      "default": 50,
+      "type": "integer"
+    },
+    "asciigenome_window_size": {
+      "title": "",
+      "required": false,
+      "description": "Maximum window size before and after variant locii used to generate ASCIIGenome screenshots.",
+      "default": 50,
+      "type": "integer"
+    },
+    "multiqc_title": {
+      "title": "",
+      "required": false,
+      "description": "Custom title for the MultiQC report.",
+      "hidden": true,
+      "type": "string"
+    },
+    "multiqc_config": {
+      "title": "",
+      "required": false,
+      "description": "Custom config file to supply to MultiQC.",
+      "hidden": true,
+      "type": "string",
+      "format": "file"
+    },
+    "max_multiqc_email_size": {
+      "title": "",
+      "required": false,
+      "description": "File size limit when attaching MultiQC reports to summary emails.",
+      "default": "25.MB",
+      "help_text": "If file generated by pipeline exceeds the threshold, it will not be attached.",
+      "hidden": true,
+      "type": "string"
+    },
+    "skip_mosdepth": {
+      "title": "",
+      "required": false,
+      "description": "Skip genome-wide and amplicon coverage plot generation from mosdepth output.",
+      "type": "boolean"
+    },
+    "skip_pangolin": {
+      "title": "",
+      "required": false,
+      "description": "Skip Pangolin lineage analysis for genome consensus sequence.",
+      "type": "boolean"
+    },
+    "skip_nextclade": {
+      "title": "",
+      "required": false,
+      "description": "Skip Nextclade clade assignment, mutation calling, and sequence quality checks for genome consensus sequence.",
+      "type": "boolean"
+    },
+    "skip_asciigenome": {
+      "title": "",
+      "required": false,
+      "description": "Skip variant screenshot generation with ASCIIGenome.",
+      "type": "boolean"
+    },
+    "skip_variants_quast": {
+      "title": "",
+      "required": false,
+      "description": "Skip generation of QUAST aggregated report for consensus sequences.",
+      "type": "boolean"
+    },
+    "skip_variants_long_table": {
+      "title": "",
+      "required": false,
+      "description": "Skip long table generation for reporting variants.",
+      "type": "boolean"
+    },
+    "skip_multiqc": {
+      "title": "",
+      "required": false,
+      "description": "Skip MultiQC.",
+      "type": "boolean"
+    },
+    "kraken2_db": {
+      "title": "",
+      "required": false,
+      "description": "Full path to Kraken2 database built from host genome.",
+      "default": "s3://ngi-igenomes/test-data/viralrecon/kraken2_human.tar.gz",
+      "type": "string"
+    },
+    "kraken2_db_name": {
+      "title": "",
+      "required": false,
+      "description": "Name for host genome as recognised by Kraken2 when using the 'kraken2 build' command.",
+      "default": "human",
+      "type": "string"
+    },
+    "kraken2_variants_host_filter": {
+      "title": "",
+      "required": false,
+      "description": "Remove host reads identified by Kraken2 before running variant calling steps in the pipeline.",
+      "type": "boolean"
+    },
+    "kraken2_assembly_host_filter": {
+      "title": "",
+      "required": false,
+      "description": "Remove host reads identified by Kraken2 before running aseembly steps in the pipeline.",
+      "default": true,
+      "type": "boolean"
+    },
+    "save_trimmed_fail": {
+      "title": "",
+      "required": false,
+      "description": "Save the trimmed FastQ files in the results directory.",
+      "help_text": "By default, trimmed FastQ files will not be saved to the results directory. Specify this flag (or set to true in your config file) to copy these files to the results directory when complete.",
+      "type": "boolean"
+    },
+    "skip_fastqc": {
+      "title": "",
+      "required": false,
+      "description": "Skip FastQC.",
+      "type": "boolean"
+    },
+    "skip_kraken2": {
+      "title": "",
+      "required": false,
+      "description": "Skip Kraken2 process for removing host classified reads.",
+      "type": "boolean"
+    },
+    "skip_fastp": {
+      "title": "",
+      "required": false,
+      "description": "Skip the initial read trimming step peformed by fastp.",
+      "type": "boolean"
+    },
+    "skip_cutadapt": {
+      "title": "",
+      "required": false,
+      "description": "Skip the amplicon trimming step with Cutadapt when using --protocol amplicon.",
+      "type": "boolean"
+    },
+    "variant_caller": {
+      "title": "",
+      "required": false,
+      "description": "Specify which variant calling algorithm you would like to use. Available options are 'ivar' (default for '--protocol amplicon') and 'bcftools' (default for '--protocol metagenomic').",
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "ivar",
+          "name": "ivar"
+        },
+        {
+          "id": "bcftools",
+          "name": "bcftools"
+        }
+      ]
+    },
+    "consensus_caller": {
+      "title": "",
+      "required": false,
+      "description": "Specify which consensus calling algorithm you would like to use. Available options are 'bcftools' and 'ivar' (default: 'bcftools').",
+      "default": "bcftools",
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "ivar",
+          "name": "ivar"
+        },
+        {
+          "id": "bcftools",
+          "name": "bcftools"
+        }
+      ]
+    },
+    "min_mapped_reads": {
+      "title": "",
+      "required": false,
+      "description": "Minimum number of mapped reads below which samples are removed from further processing. Some downstream steps in the pipeline will fail if this threshold is too low.",
+      "default": 1000,
+      "type": "integer"
+    },
+    "ivar_trim_noprimer": {
+      "title": "",
+      "required": false,
+      "description": "This option unsets the '-e' parameter in 'ivar trim' to discard reads without primers.",
+      "type": "boolean"
+    },
+    "ivar_trim_offset": {
+      "title": "",
+      "required": false,
+      "description": "This option sets the '-x' parameter in 'ivar trim' so that reads that occur at the specified offset positions relative to primer positions will also be trimmed.",
+      "help_text": "This parameter will need to be set for some amplicon-based sequencing protocols (e.g. SWIFT) as described and implemented [here](https://github.com/andersen-lab/ivar/pull/88)",
+      "type": "integer"
+    },
+    "filter_duplicates": {
+      "title": "",
+      "required": false,
+      "description": "Filtered duplicates reads detected by Picard MarkDuplicates from alignments.",
+      "type": "boolean"
+    },
+    "save_unaligned": {
+      "title": "",
+      "required": false,
+      "description": "Save unaligned reads in FastQ format from Bowtie 2 to the results directory.",
+      "type": "boolean"
+    },
+    "save_mpileup": {
+      "title": "",
+      "required": false,
+      "description": "Save mpileup files generated when calling variants with iVar variants or iVar consensus.",
+      "type": "boolean"
+    },
+    "skip_ivar_trim": {
+      "title": "",
+      "required": false,
+      "description": "Skip iVar primer trimming step. Not recommended for --protocol amplicon.",
+      "type": "boolean"
+    },
+    "skip_markduplicates": {
+      "title": "",
+      "required": false,
+      "description": "Skip picard MarkDuplicates step.",
+      "default": true,
+      "type": "boolean"
+    },
+    "skip_picard_metrics": {
+      "title": "",
+      "required": false,
+      "description": "Skip Picard CollectMultipleMetrics steps.",
+      "type": "boolean"
+    },
+    "skip_snpeff": {
+      "title": "",
+      "required": false,
+      "description": "Skip SnpEff and SnpSift annotation of variants.",
+      "type": "boolean"
+    },
+    "skip_consensus_plots": {
+      "title": "",
+      "required": false,
+      "description": "Skip creation of consensus base density plots.",
+      "type": "boolean"
+    },
+    "skip_consensus": {
+      "title": "",
+      "required": false,
+      "description": "Skip genome consensus creation step and any downstream QC.",
+      "type": "boolean"
+    },
+    "skip_variants": {
+      "title": "",
+      "required": false,
+      "description": "Specify this parameter to skip all of the variant calling and mapping steps in the pipeline.",
+      "type": "boolean"
+    },
+    "assemblers": {
+      "title": "",
+      "required": false,
+      "description": "Specify which assembly algorithms you would like to use. Available options are 'spades', 'unicycler' and 'minia'.",
+      "default": "spades",
+      "type": "string"
+    },
+    "spades_mode": {
+      "title": "",
+      "required": false,
+      "description": "Specify the SPAdes mode you would like to run (default: 'rnaviral').",
+      "default": "rnaviral",
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "rnaviral",
+          "name": "rnaviral"
+        },
+        {
+          "id": "corona",
+          "name": "corona"
+        },
+        {
+          "id": "metaviral",
+          "name": "metaviral"
+        },
+        {
+          "id": "meta",
+          "name": "meta"
+        },
+        {
+          "id": "metaplasmid",
+          "name": "metaplasmid"
+        },
+        {
+          "id": "plasmid",
+          "name": "plasmid"
+        },
+        {
+          "id": "isolate",
+          "name": "isolate"
+        },
+        {
+          "id": "rna",
+          "name": "rna"
+        },
+        {
+          "id": "bio",
+          "name": "bio"
+        }
+      ]
+    },
+    "spades_hmm": {
+      "title": "",
+      "required": false,
+      "description": "Path to profile HMMs specific for gene/organism to enhance SPAdes assembly.",
+      "type": "string",
+      "format": "file"
+    },
+    "blast_db": {
+      "title": "",
+      "required": false,
+      "description": "Path to directory or tar.gz archive for pre-built BLAST database.",
+      "type": "string"
+    },
+    "skip_bandage": {
+      "title": "",
+      "required": false,
+      "description": "Skip Bandage image creation for assembly visualisation.",
+      "type": "boolean"
+    },
+    "skip_blast": {
+      "title": "",
+      "required": false,
+      "description": "Skip blastn of assemblies relative to reference genome.",
+      "type": "boolean"
+    },
+    "skip_abacas": {
+      "title": "",
+      "required": false,
+      "description": "Skip ABACAS process for assembly contiguation.",
+      "type": "boolean"
+    },
+    "skip_plasmidid": {
+      "title": "",
+      "required": false,
+      "description": "Skip assembly report generation by PlasmidID.",
+      "default": true,
+      "type": "boolean"
+    },
+    "skip_assembly_quast": {
+      "title": "",
+      "required": false,
+      "description": "Skip generation of QUAST aggregated report for assemblies.",
+      "type": "boolean"
+    },
+    "skip_assembly": {
+      "title": "",
+      "required": false,
+      "description": "Specify this parameter to skip all of the de novo assembly steps in the pipeline.",
+      "type": "boolean"
+    },
+    "help": {
+      "title": "",
+      "required": false,
+      "description": "Display help text.",
+      "hidden": true,
+      "type": "boolean"
+    },
+    "version": {
+      "title": "",
+      "required": false,
+      "description": "Display version and exit.",
+      "hidden": true,
+      "type": "boolean"
+    },
+    "publish_dir_mode": {
+      "title": "",
+      "required": false,
+      "description": "Method used to save pipeline results to output directory.",
+      "default": "copy",
+      "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
+      "hidden": true,
+      "type": "string",
+      "format": "enum",
+      "enum": [
+        {
+          "id": "symlink",
+          "name": "symlink"
+        },
+        {
+          "id": "rellink",
+          "name": "rellink"
+        },
+        {
+          "id": "link",
+          "name": "link"
+        },
+        {
+          "id": "copy",
+          "name": "copy"
+        },
+        {
+          "id": "copyNoFollow",
+          "name": "copyNoFollow"
+        },
+        {
+          "id": "move",
+          "name": "move"
+        }
+      ]
+    },
+    "email_on_fail": {
+      "title": "",
+      "required": false,
+      "description": "Email address for completion summary, only when pipeline fails.",
+      "help_text": "This works exactly as with `--email`, except emails are only sent if the workflow is not successful.",
+      "hidden": true,
+      "type": "string",
+      "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
+    },
+    "plaintext_email": {
+      "title": "",
+      "required": false,
+      "description": "Send plain-text email instead of HTML.",
+      "help_text": "Set to receive plain-text e-mails instead of HTML formatted.",
+      "hidden": true,
+      "type": "boolean"
+    },
+    "monochrome_logs": {
+      "title": "",
+      "required": false,
+      "description": "Do not use coloured log outputs.",
+      "help_text": "Set to disable colourful command line output and live life in monochrome.",
+      "hidden": true,
+      "type": "boolean"
+    },
+    "hook_url": {
+      "title": "",
+      "required": false,
+      "description": "Incoming hook URL for messaging service",
+      "help_text": "Incoming hook URL for messaging service. Currently, only MS Teams is supported.",
+      "hidden": true,
+      "type": "string"
+    },
+    "validate_params": {
+      "title": "",
+      "required": false,
+      "description": "Boolean whether to validate parameters against the schema at runtime",
+      "default": true,
+      "hidden": true,
+      "type": "boolean"
+    },
+    "show_hidden_params": {
+      "title": "",
+      "required": false,
+      "description": "Show all params when using `--help`",
+      "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters.",
+      "hidden": true,
+      "type": "boolean"
+    },
+    "max_cpus": {
+      "title": "",
+      "required": false,
+      "description": "Maximum number of CPUs that can be requested for any single job.",
+      "default": 16,
+      "help_text": "Use to set an upper-limit for the CPU requirement for each process. Should be an integer e.g. `--max_cpus 1`",
+      "hidden": true,
+      "type": "integer"
+    },
+    "max_memory": {
+      "title": "",
+      "required": false,
+      "description": "Maximum amount of memory that can be requested for any single job.",
+      "default": "128.GB",
+      "help_text": "Use to set an upper-limit for the memory requirement for each process. Should be a string in the format integer-unit e.g. `--max_memory '8.GB'`",
+      "hidden": true,
+      "type": "string",
+      "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$"
+    },
+    "max_time": {
+      "title": "",
+      "required": false,
+      "description": "Maximum amount of time that can be requested for any single job.",
+      "default": "240.h",
+      "help_text": "Use to set an upper-limit for the time requirement for each process. Should be a string in the format integer-unit e.g. `--max_time '2.h'`",
+      "hidden": true,
+      "type": "string",
+      "pattern": "^(\\d+\\.?\\s*(s|m|h|day)\\s*)+$"
+    },
+    "custom_config_version": {
+      "title": "",
+      "required": false,
+      "description": "Git commit id for Institutional configs.",
+      "default": "master",
+      "hidden": true,
+      "type": "string"
+    },
+    "custom_config_base": {
+      "title": "",
+      "required": false,
+      "description": "Base directory for Institutional configs.",
+      "default": "https://raw.githubusercontent.com/nf-core/configs/master",
+      "help_text": "If you're running offline, nextflow will not be able to fetch the institutional config files from the internet. If you don't need them, then this is not a problem. If you do need them, you should download the files from the repo and tell nextflow where to find them with the `custom_config_base` option. For example:\n\n```bash\n## Download and unzip the config files\ncd /path/to/my/configs\nwget https://github.com/nf-core/configs/archive/master.zip\nunzip master.zip\n\n## Run the pipeline\ncd /path/to/my/data\nnextflow run /path/to/pipeline/ --custom_config_base /path/to/my/configs/configs-master/\n```\n\n> Note that the nf-core/tools helper package has a `download` command to download all required pipeline files + singularity containers + institutional configs in one go for you, to make this process easier.",
+      "hidden": true,
+      "type": "string",
+      "format": "dir-path"
+    },
+    "config_profile_name": {
+      "title": "",
+      "required": false,
+      "description": "Institutional config name.",
+      "hidden": true,
+      "type": "string"
+    },
+    "config_profile_description": {
+      "title": "",
+      "required": false,
+      "description": "Institutional config description.",
+      "hidden": true,
+      "type": "string"
+    },
+    "config_profile_contact": {
+      "title": "",
+      "required": false,
+      "description": "Institutional config contact information.",
+      "hidden": true,
+      "type": "string"
+    },
+    "config_profile_url": {
+      "title": "",
+      "required": false,
+      "description": "Institutional config URL link.",
+      "hidden": true,
+      "type": "string"
+    }
+  },
+  "ui": {
+    "inputs": [
+      {
+        "id": "input_output_options",
+        "title": "Input/output options",
+        "description": "Define where the pipeline should find input data and save output data.",
+        "fields": [
+          "input",
+          "platform",
+          "protocol",
+          "outdir",
+          "email"
+        ]
+      },
+      {
+        "id": "reference_genome_options",
+        "title": "Reference genome options",
+        "description": "Options for the reference genome indices used to align reads.",
+        "fields": [
+          "genome",
+          "fasta",
+          "gff",
+          "bowtie2_index",
+          "primer_bed",
+          "primer_fasta",
+          "primer_set",
+          "primer_set_version",
+          "primer_left_suffix",
+          "primer_right_suffix",
+          "save_reference"
+        ]
+      },
+      {
+        "id": "nanopore_options",
+        "title": "Nanopore options",
+        "description": "Options exclusive to running the pipeline on Nanopore data using the ARTIC fieldbioinformatics pipeline.",
+        "fields": [
+          "fastq_dir",
+          "fast5_dir",
+          "sequencing_summary",
+          "min_barcode_reads",
+          "min_guppyplex_reads",
+          "artic_minion_caller",
+          "artic_minion_aligner",
+          "artic_scheme",
+          "artic_minion_medaka_model",
+          "skip_pycoqc",
+          "skip_nanoplot"
+        ]
+      },
+      {
+        "id": "nanopore_illumina_options",
+        "title": "Nanopore/Illumina options",
+        "description": "Options common to both the Nanopore and Illumina workflows in the pipeline.",
+        "fields": [
+          "nextclade_dataset",
+          "nextclade_dataset_name",
+          "nextclade_dataset_reference",
+          "nextclade_dataset_tag",
+          "asciigenome_read_depth",
+          "asciigenome_window_size",
+          "multiqc_title",
+          "multiqc_config",
+          "max_multiqc_email_size",
+          "skip_mosdepth",
+          "skip_pangolin",
+          "skip_nextclade",
+          "skip_asciigenome",
+          "skip_variants_quast",
+          "skip_variants_long_table",
+          "skip_multiqc"
+        ]
+      },
+      {
+        "id": "illumina_qc_read_trimming_and_filtering_options",
+        "title": "Illumina QC, read trimming and filtering options",
+        "description": "Options to adjust QC, read trimming and host read filtering with Kraken2 for the Illumina workflow.",
+        "fields": [
+          "kraken2_db",
+          "kraken2_db_name",
+          "kraken2_variants_host_filter",
+          "kraken2_assembly_host_filter",
+          "save_trimmed_fail",
+          "skip_fastqc",
+          "skip_kraken2",
+          "skip_fastp",
+          "skip_cutadapt"
+        ]
+      },
+      {
+        "id": "illumina_variant_calling_options",
+        "title": "Illumina variant calling options",
+        "description": "Various options for the variant calling branch of the Illumina workflow.",
+        "fields": [
+          "variant_caller",
+          "consensus_caller",
+          "min_mapped_reads",
+          "ivar_trim_noprimer",
+          "ivar_trim_offset",
+          "filter_duplicates",
+          "save_unaligned",
+          "save_mpileup",
+          "skip_ivar_trim",
+          "skip_markduplicates",
+          "skip_picard_metrics",
+          "skip_snpeff",
+          "skip_consensus_plots",
+          "skip_consensus",
+          "skip_variants"
+        ]
+      },
+      {
+        "id": "illumina_de_novo_assembly_options",
+        "title": "Illumina de novo assembly options",
+        "description": "Various options for the de novo assembly branch of the Illumina workflow.",
+        "fields": [
+          "assemblers",
+          "spades_mode",
+          "spades_hmm",
+          "blast_db",
+          "skip_bandage",
+          "skip_blast",
+          "skip_abacas",
+          "skip_plasmidid",
+          "skip_assembly_quast",
+          "skip_assembly"
+        ]
+      },
+      {
+        "id": "generic_options",
+        "title": "Generic options",
+        "description": "Less common options for the pipeline, typically set in a config file.",
+        "fields": [
+          "help",
+          "version",
+          "publish_dir_mode",
+          "email_on_fail",
+          "plaintext_email",
+          "monochrome_logs",
+          "hook_url",
+          "validate_params",
+          "show_hidden_params"
+        ]
+      },
+      {
+        "id": "max_job_request_options",
+        "title": "Max job request options",
+        "description": "Set the top limit for requested resources for any single job.",
+        "fields": [
+          "max_cpus",
+          "max_memory",
+          "max_time"
+        ]
+      },
+      {
+        "id": "institutional_config_options",
+        "title": "Institutional config options",
+        "description": "Parameters used to describe centralised config profiles. These should not be edited.",
+        "fields": [
+          "custom_config_version",
+          "custom_config_base",
+          "config_profile_name",
+          "config_profile_description",
+          "config_profile_contact",
+          "config_profile_url"
+        ]
+      }
+    ]
+  }
+}
