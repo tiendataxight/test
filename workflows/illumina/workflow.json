@@ -1,6 +1,6 @@
 {
   "schema": "v3",
-  "id": "",
+  "id": "illumina",
   "displayName": "",
   "title": "nf-core/viralrecon pipeline parameters",
   "workflowVersion": "",
