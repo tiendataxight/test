@@ -55,7 +55,7 @@
       "required": true,
       "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
       "type": "string",
-      "default": "{{formbio.params.output}}"
+      "default": "{formbio.params.output}"
     },
     "genome": {
       "title": "",
