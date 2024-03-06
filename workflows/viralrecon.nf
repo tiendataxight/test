@@ -54,9 +54,9 @@ WorkflowMain.initialise(workflow, params, log)
 */
 
 if (params.platform == 'illumina') {
-    include { ILLUMINA } from './workflows/illumina'
+    include { ILLUMINA } from './illumina'
 } else if (params.platform == 'nanopore') {
-    include { NANOPORE } from './workflows/nanopore'
+    include { NANOPORE } from './nanopore'
 }
 
 workflow NFCORE_VIRALRECON {
@@ -86,9 +86,7 @@ workflow NFCORE_VIRALRECON {
 // See: https://github.com/nf-core/rnaseq/issues/619
 //
 
-workflow {
-    NFCORE_VIRALRECON ()
-}
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
