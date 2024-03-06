@@ -1,5 +1,5 @@
-include { NFCORE_VIRALRECON } from './viralrecon'
+include { VIRALRECON } from './viralrecon'
 
 workflow {
-    NFCORE_VIRALRECON ()
+    VIRALRECON ()
 }
